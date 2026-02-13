@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Explanation = require('../models/Explanation');
 
@@ -24,11 +25,21 @@ exports.generateExplanation = async (req, res, next) => {
       '  "summary": "2-4 line explanation of what the code does",',
       '  "timeComplexity": "Big-O time complexity with reason",',
       '  "spaceComplexity": "Big-O space complexity with reason",',
+      '  "logicBreakdown": [',
+      '    "step 1",',
+      '    "step 2",',
+      '    "step 3"',
+      '  ],',
+      '  "edgeCases": [',
+      '    "edge case 1",',
+      '    "edge case 2"',
+      '  ],',
       '  "bugs": [',
       '    "possible bug 1",',
       '    "possible bug 2"',
       '  ],',
       '  "beginnerExplanation": "Simple explanation a beginner can understand",',
+      '  "recommendation": "one concise recommendation to improve the code",',
       '  "optimizedVersion": "Improved or more efficient version of the code (same language)",',
       '  "keyConcepts": [',
       '    "concept 1",',
@@ -102,7 +113,23 @@ exports.generateExplanation = async (req, res, next) => {
 
 exports.saveExplanation = async (req, res, next) => {
   try {
-    const { uid, code, explanation, language, complexity } = req.body;
+    const {
+      uid,
+      code,
+      explanation,
+      language,
+      complexity,
+      summary,
+      timeComplexity,
+      spaceComplexity,
+      logicBreakdown,
+      edgeCases,
+      bugs,
+      beginnerExplanation,
+      recommendation,
+      optimizedVersion,
+      keyConcepts,
+    } = req.body;
 
     if (!uid) {
       return res.status(400).json({ message: 'uid is required' });
@@ -110,7 +137,7 @@ exports.saveExplanation = async (req, res, next) => {
 
     const user = await User.findOne({ firebaseUid: uid });
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ error: 'User not found' });
     }
 
     const saved = await Explanation.create({
@@ -119,6 +146,16 @@ exports.saveExplanation = async (req, res, next) => {
       explanation,
       language,
       complexity,
+      summary,
+      timeComplexity,
+      spaceComplexity,
+      logicBreakdown,
+      edgeCases,
+      bugs,
+      beginnerExplanation,
+      recommendation,
+      optimizedVersion,
+      keyConcepts,
     });
 
     res.status(201).json(saved);
@@ -137,11 +174,10 @@ exports.getUserExplanations = async (req, res, next) => {
 
     const user = await User.findOne({ firebaseUid: uid });
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    const explanations = await Explanation.find({ userId: user._id })
-      .sort({ createdAt: -1 });
+    const explanations = await Explanation.find({ userId: user._id }).sort({ createdAt: -1 });
 
     res.json(explanations);
   } catch (error) {
@@ -181,6 +217,23 @@ exports.updateExplanation = async (req, res, next) => {
     }
 
     res.json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getExplanationById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: 'id is required' });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid id' });
+    }
+
+    const explanation = await Explanation.findById(id);
+    if (!explanation) return res.status(404).json({ message: 'Explanation not found' });
+
+    res.json(explanation);
   } catch (error) {
     next(error);
   }

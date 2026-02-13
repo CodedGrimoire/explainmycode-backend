@@ -7,6 +7,16 @@ const explanationSchema = new mongoose.Schema(
     explanation: String,
     language: String,
     complexity: String,
+    summary: String,
+    timeComplexity: String,
+    spaceComplexity: String,
+    logicBreakdown: [String],
+    edgeCases: [String],
+    bugs: [String],
+    beginnerExplanation: String,
+    recommendation: String,
+    optimizedVersion: String,
+    keyConcepts: [String],
   },
   { timestamps: true }
 );
