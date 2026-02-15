@@ -26,16 +26,12 @@ exports.generateTutorial = async (req, res, next) => {
       '  "category": "algorithm | data structure",',
       '  "theory": "3-5 sentences explaining the intuition and when it matters",',
       '  "implementationSteps": ["step 1", "step 2", "step 3"],',
-      '  "pseudocodeB64": "base64-encoded pseudocode text",',
-      '  "codeExample": { "language": "preferred code language", "codeB64": "base64-encoded code snippet" },',
       '  "useCases": ["when to use it", "another good use"],',
       '  "complexity": { "time": "O(...)", "space": "O(...)" },',
       '  "tips": ["practical tip or pitfall", "one more improvement"],',
       '  "relatedConcepts": ["related topic", "another"]',
       '}',
-      'Rules: all free-text (theory, pseudocodeB64 decoded, codeExample.codeB64 decoded) must be concise; codeExample under 30 lines.',
-      'Do NOT include raw newlines in JSON strings; encode multi-line text in base64 fields only.',
-      `Preferred language for codeExample: ${language}.`,
+      'Rules: keep strings concise; no code or pseudocode fields are required.',
     ].join('\n');
 
     const response = await fetch(GROQ_ENDPOINT, {
@@ -80,21 +76,6 @@ exports.generateTutorial = async (req, res, next) => {
       cleanText = cleanText.replace(/\n\s*\.replace\([^)]*\)/g, '');
 
       const parsed = JSON.parse(cleanText);
-
-      if (parsed?.pseudocodeB64) {
-        try {
-          parsed.pseudocode = Buffer.from(parsed.pseudocodeB64, 'base64').toString('utf8');
-        } catch (e) {
-          parsed.pseudocode = parsed.pseudocodeB64;
-        }
-      }
-      if (parsed?.codeExample?.codeB64) {
-        try {
-          parsed.codeExample.code = Buffer.from(parsed.codeExample.codeB64, 'base64').toString('utf8');
-        } catch (e) {
-          parsed.codeExample.code = parsed.codeExample.codeB64;
-        }
-      }
 
       // Ensure complexity exists even if model omits it
       if (!parsed.complexity) {
