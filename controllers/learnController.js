@@ -1,3 +1,7 @@
+const mongoose = require('mongoose');
+const User = require('../models/User');
+const Tutorial = require('../models/Tutorial');
+
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'llama-3.1-8b-instant';
 
@@ -77,6 +81,31 @@ exports.generateTutorial = async (req, res, next) => {
     } catch (err) {
       return res.status(500).json({ message: 'AI returned invalid JSON', raw: content });
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.saveTutorial = async (req, res, next) => {
+  try {
+    const { uid, topic, level, category, language, tutorial } = req.body || {};
+
+    if (!uid) return res.status(400).json({ message: 'uid is required' });
+    if (!tutorial) return res.status(400).json({ message: 'tutorial payload is required' });
+
+    const user = await User.findOne({ firebaseUid: uid });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const saved = await Tutorial.create({
+      userId: user._id,
+      topic,
+      level,
+      category,
+      language,
+      tutorial,
+    });
+
+    return res.status(201).json(saved);
   } catch (error) {
     next(error);
   }
