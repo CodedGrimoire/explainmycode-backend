@@ -77,17 +77,28 @@ exports.generateTutorial = async (req, res, next) => {
       }
 
       let cleanText = stripped.slice(jsonStart, jsonEnd);
-      // remove accidental JS method chains the model sometimes appends
       cleanText = cleanText.replace(/\n\s*\.replace\([^)]*\)/g, '');
 
       const parsed = JSON.parse(cleanText);
 
-      // decode base64 fields if present
       if (parsed?.pseudocodeB64) {
-        parsed.pseudocode = Buffer.from(parsed.pseudocodeB64, 'base64').toString('utf8');
+        try {
+          parsed.pseudocode = Buffer.from(parsed.pseudocodeB64, 'base64').toString('utf8');
+        } catch (e) {
+          parsed.pseudocode = parsed.pseudocodeB64;
+        }
       }
       if (parsed?.codeExample?.codeB64) {
-        parsed.codeExample.code = Buffer.from(parsed.codeExample.codeB64, 'base64').toString('utf8');
+        try {
+          parsed.codeExample.code = Buffer.from(parsed.codeExample.codeB64, 'base64').toString('utf8');
+        } catch (e) {
+          parsed.codeExample.code = parsed.codeExample.codeB64;
+        }
+      }
+
+      // Ensure complexity exists even if model omits it
+      if (!parsed.complexity) {
+        parsed.complexity = { time: parsed.timeComplexity || '—', space: parsed.spaceComplexity || '—' };
       }
 
       return res.json(parsed);
