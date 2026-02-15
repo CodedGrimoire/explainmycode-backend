@@ -120,3 +120,18 @@ exports.saveTutorial = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getUserTutorials = async (req, res, next) => {
+  try {
+    const { uid } = req.query;
+    if (!uid) return res.status(400).json({ message: 'uid is required' });
+
+    const user = await User.findOne({ firebaseUid: uid });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const tutorials = await Tutorial.find({ userId: user._id }).sort({ createdAt: -1 });
+    return res.json(tutorials);
+  } catch (error) {
+    next(error);
+  }
+};
