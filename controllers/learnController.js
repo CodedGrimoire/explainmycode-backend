@@ -76,7 +76,10 @@ exports.generateTutorial = async (req, res, next) => {
         return res.status(502).json({ message: 'AI returned no JSON object', raw: content });
       }
 
-      const cleanText = stripped.slice(jsonStart, jsonEnd);
+      let cleanText = stripped.slice(jsonStart, jsonEnd);
+      // remove accidental JS method chains the model sometimes appends
+      cleanText = cleanText.replace(/\n\s*\.replace\([^)]*\)/g, '');
+
       const parsed = JSON.parse(cleanText);
 
       // decode base64 fields if present
