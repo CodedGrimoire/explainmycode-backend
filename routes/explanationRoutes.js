@@ -7,7 +7,13 @@ const {
   updateExplanation,
   getExplanationById,
 } = require('../controllers/explanationController');
-const { generateTutorial, saveTutorial, getUserTutorials, getTutorialById } = require('../controllers/learnController');
+const {
+  generateTutorial,
+  saveTutorial,
+  getUserTutorials,
+  getTutorialById,
+  deleteTutorial,
+} = require('../controllers/learnController');
 
 const router = express.Router();
 
@@ -21,5 +27,6 @@ router.post('/learn', generateTutorial);
 router.post('/learn/save', saveTutorial);
 router.get('/learn/user', getUserTutorials);
 router.get('/learn/:id', getTutorialById);
+router.delete('/learn/:id', deleteTutorial);
 
 module.exports = router;
