@@ -19,21 +19,22 @@ exports.generateTutorial = async (req, res, next) => {
 
     const prompt = [
       `Create a compact study card for the ${category} "${topic}" tailored for ${level} learners.`,
-      'Return ONLY valid JSON matching this shape (no markdown/backticks):',
+      'Return ONLY valid JSON (no markdown/backticks) matching this shape:',
       '{',
       '  "title": "Readable title for the concept",',
       '  "level": "beginner | medium | hard",',
       '  "category": "algorithm | data structure",',
       '  "theory": "3-5 sentences explaining the intuition and when it matters",',
       '  "implementationSteps": ["step 1", "step 2", "step 3"],',
-      '  "pseudocode": "short pseudocode showing the flow",',
-      '  "codeExample": { "language": "preferred code language", "code": "small runnable example" },',
+      '  "pseudocodeB64": "base64-encoded pseudocode text",',
+      '  "codeExample": { "language": "preferred code language", "codeB64": "base64-encoded code snippet" },',
       '  "useCases": ["when to use it", "another good use"],',
       '  "complexity": { "time": "O(...)", "space": "O(...)" },',
       '  "tips": ["practical tip or pitfall", "one more improvement"],',
       '  "relatedConcepts": ["related topic", "another"]',
       '}',
-      'Rules: concise, keep codeExample under 30 lines, respond with JSON only.',
+      'Rules: all free-text (theory, pseudocodeB64 decoded, codeExample.codeB64 decoded) must be concise; codeExample under 30 lines.',
+      'Do NOT include raw newlines in JSON strings; encode multi-line text in base64 fields only.',
       `Preferred language for codeExample: ${language}.`,
     ].join('\n');
 
@@ -77,6 +78,15 @@ exports.generateTutorial = async (req, res, next) => {
 
       const cleanText = stripped.slice(jsonStart, jsonEnd);
       const parsed = JSON.parse(cleanText);
+
+      // decode base64 fields if present
+      if (parsed?.pseudocodeB64) {
+        parsed.pseudocode = Buffer.from(parsed.pseudocodeB64, 'base64').toString('utf8');
+      }
+      if (parsed?.codeExample?.codeB64) {
+        parsed.codeExample.code = Buffer.from(parsed.codeExample.codeB64, 'base64').toString('utf8');
+      }
+
       return res.json(parsed);
     } catch (err) {
       return res.status(500).json({ message: 'AI returned invalid JSON', raw: content });
