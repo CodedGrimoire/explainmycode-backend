@@ -138,3 +138,19 @@ exports.getUserTutorials = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getTutorialById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid id' });
+    }
+
+    const tutorial = await Tutorial.findById(id);
+    if (!tutorial) return res.status(404).json({ message: 'Tutorial not found' });
+
+    return res.json(tutorial);
+  } catch (error) {
+    next(error);
+  }
+};
